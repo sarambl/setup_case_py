@@ -92,16 +92,18 @@ class CaseSetup:
     def cp_code(self):
         conf = self.conf
         case_path = self.case_path
-        if Path(conf.get('pathChem')) is not None and \
-                Path(conf.get('pathSourceMod')) is not None:
+        if conf.get('pathChem') is not None and \
+                conf.get('pathSourceMod') is not None:
             pathChem = self.root_path / Path(conf.get('pathChem'))
             comm = f'cp  {pathChem} {case_path}'
+            print(comm)
             run(comm, shell=True)
-
-        pathSourceMod = self.root_path / Path(conf.get('pathSourceMod'))
-        path_case_SourceMods = case_path / 'SourceMods/'
-        comm = f'cp -r {pathSourceMod}/* {path_case_SourceMods}/'
-        run(comm, shell=True)
+        if conf.get('source_mod_path') is not None:
+            pathSourceMod = self.root_path / Path(conf.get('pathSourceMod'))
+            path_case_SourceMods = case_path / 'SourceMods/'
+            comm = f'cp -r {pathSourceMod}/* {path_case_SourceMods}/'
+            print(comm)
+            run(comm, shell=True)
         return
 
     def run_setup(self):
