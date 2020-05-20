@@ -6,6 +6,7 @@ from subprocess import run
 import configparser
 
 
+# %%
 class CaseSetup:
 
     def __init__(self, path_folder, case_name):
@@ -139,7 +140,7 @@ class CaseSetup:
             print(comm)
             run(comm, shell=True)
         # copy sourcemods:
-        if conf.get('source_mod_path') is not None:
+        if conf.get('pathSourceMod') is not None:
             pathSourceMod = self.root_path / Path(conf.get('pathSourceMod'))
             path_case_SourceMods = case_path / 'SourceMods/'
             comm = f'cp -r {pathSourceMod}/* {path_case_SourceMods}/'
@@ -190,7 +191,6 @@ class CaseSetup:
         self.setup_nl()
         self.case_build()
         return
-    # %%
 
 
 # %%
