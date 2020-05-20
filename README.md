@@ -8,5 +8,5 @@ whatever user namelists you wish to edit.
 Run:
 ```bash
 python CaseSetup path/to/case_name/folder
-```
+```  
 

@@ -1,9 +1,10 @@
+# %%
 import configparser
 import glob
 import shutil
 from pathlib import Path
 from subprocess import run
-
+# %%
 
 class CaseSetup:
 
@@ -15,6 +16,7 @@ class CaseSetup:
         config = configparser.ConfigParser()
         config.read(filen)
         config.sections()
+        print('here')
         conf = config['CONFIG']
         self.conf = conf
         self.root_path = Path(conf.get('root'))
@@ -57,14 +59,18 @@ class CaseSetup:
         RUN_STARTDATE = conf.get('RUN_STARTDATE')
         NUMNODES = conf.get('NUMNODES')
         NTASKS_ESP = conf.get('NTASKS_ESP')
-        run_type = conf.get('run_type')
+        queue_type = conf.get('queue_type')
         REST_N = conf.get('REST_N')
-        print(run_type)
-        if run_type is None:
-            run_type = 'normal'
+        RUN_TYPE=conf.get('RUN_TYPE')
+        RUN_REFCASE=conf.get('RUN_REFCASE')
+        RUN_REFDATE=conf.get('RUN_REFDATE')
+        CAM_CONFIG_OPS_chem_mech_file=conf.get('CAM_CONFIG_OPS_chem_mech_file')
+        print(queue_type)
+        if queue_type is None:
+            queue_type = 'normal'
         commands = []
 
-        if str(run_type) == 'devel':
+        if str(queue_type) == 'devel':
             JOB_WALLCLOCK_TIME = '00:30:00'
             NTASKS_ESP = 1
             NUMNODES = -4
@@ -75,15 +81,23 @@ class CaseSetup:
         else:
             commands.append(
                 'sed -i \'s/<arg flag="--qos" name="$JOB_QUEUE"/<arg flag="-p" name="$JOB_QUEUE"/\' env_batch.xml')
+        if RUN_TYPE is not None:
+            commands.append(f'./xmlchange RUN_TYPE={RUN_TYPE} --file env_run.xml')
+        if RUN_REFCASE is not None:
+            commands.append(f'./xmlchange RUN_REFCASE={RUN_REFCASE} --file env_run.xml')
+        if RUN_REFDATE is not None:
+            commands.append(f'./xmlchange RUN_REFDATE={RUN_REFDATE} --file env_run.xml')
 
         commands.append(f'./xmlchange STOP_OPTION={STOP_OPTION},STOP_N={STOP_N},REST_N={REST_N} --file env_run.xml')
         commands.append(f'./xmlchange JOB_WALLCLOCK_TIME={JOB_WALLCLOCK_TIME} --file env_batch.xml --subgroup case.run')
         if CAM_CONFIG_OPTS_append1 is not None:
             commands.append(f'./xmlchange --append CAM_CONFIG_OPTS={CAM_CONFIG_OPTS_append1} --file env_build.xml')
+        if CAM_CONFIG_OPS_chem_mech_file is not None:
+            commands.append(f'./xmlchange  --append CAM_CONFIG_OPTS="-usr_mech_infile \$CASEROOT/{CAM_CONFIG_OPS_chem_mech_file}" --file env_build.xml')
         commands.append(f'./xmlchange CALENDAR={CALENDAR} --file env_build.xml')
         commands.append(f'./xmlchange RUN_STARTDATE={RUN_STARTDATE} --file env_run.xml')
         commands.append(f'./xmlchange NTASKS={NUMNODES},NTASKS_ESP={NTASKS_ESP} --file env_mach_pes.xml')
-        commands.append(f'./xmlchange --force JOB_QUEUE={run_type} --file env_batch.xml')
+        commands.append(f'./xmlchange --force JOB_QUEUE={queue_type} --file env_batch.xml')
 
         for com in commands:
             print(com)
@@ -133,16 +147,17 @@ class CaseSetup:
         self.setup_nl()
         self.case_build()
         return
-
     # %%
 
 
+# %%
 if __name__ == '__main__':
     import sys
 
     args = sys.argv
     path_casefiles = Path(args[1])
-
     casename = path_casefiles.stem
     cs = CaseSetup(path_casefiles, casename)
+# %%
     cs.create_case_all_tasks()
+# %%
