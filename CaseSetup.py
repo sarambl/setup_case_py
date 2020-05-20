@@ -1,10 +1,10 @@
 # %%
-import configparser
 import glob
 import shutil
 from pathlib import Path
 from subprocess import run
-# %%
+import configparser
+
 
 class CaseSetup:
 
@@ -25,6 +25,10 @@ class CaseSetup:
         self.case_path = case_path
 
     def setup_case(self):
+        """
+        Run create_newcase with specified settings
+        :return:
+        """
         conf = self.conf
         case_path = self.case_path
         compset = conf.get('COMPSET')
@@ -48,6 +52,10 @@ class CaseSetup:
         run(create_case, cwd=run_path, shell=True)
 
     def do_xmlchanges(self):
+        """
+        Do various xml-changes.
+        :return:
+        """
         conf = self.conf
         case_path = self.case_path
         run_path = case_path
@@ -61,26 +69,31 @@ class CaseSetup:
         NTASKS_ESP = conf.get('NTASKS_ESP')
         queue_type = conf.get('queue_type')
         REST_N = conf.get('REST_N')
-        RUN_TYPE=conf.get('RUN_TYPE')
-        RUN_REFCASE=conf.get('RUN_REFCASE')
-        RUN_REFDATE=conf.get('RUN_REFDATE')
-        CAM_CONFIG_OPS_chem_mech_file=conf.get('CAM_CONFIG_OPS_chem_mech_file')
+        RUN_TYPE = conf.get('RUN_TYPE')
+        RUN_REFCASE = conf.get('RUN_REFCASE')
+        RUN_REFDATE = conf.get('RUN_REFDATE')
+        CAM_CONFIG_OPS_chem_mech_file = conf.get('CAM_CONFIG_OPS_chem_mech_file')
         print(queue_type)
         if queue_type is None:
             queue_type = 'normal'
+        # list of commands to be run:
         commands = []
 
         if str(queue_type) == 'devel':
+            # appropriate time limit:
             JOB_WALLCLOCK_TIME = '00:30:00'
             NTASKS_ESP = 1
             NUMNODES = -4
             REST_N = 4
             STOP_OPTION = 'ndays'
+            # stupid quickfix to use the development queue: replace line in file
             commands.append(
                 'sed -i \'s/<arg flag="-p" name="$JOB_QUEUE"/<arg flag="--qos" name="$JOB_QUEUE"/\' env_batch.xml')
         else:
+            # probably unnecessary:
             commands.append(
                 'sed -i \'s/<arg flag="--qos" name="$JOB_QUEUE"/<arg flag="-p" name="$JOB_QUEUE"/\' env_batch.xml')
+
         if RUN_TYPE is not None:
             commands.append(f'./xmlchange RUN_TYPE={RUN_TYPE} --file env_run.xml')
         if RUN_REFCASE is not None:
@@ -88,30 +101,44 @@ class CaseSetup:
         if RUN_REFDATE is not None:
             commands.append(f'./xmlchange RUN_REFDATE={RUN_REFDATE} --file env_run.xml')
 
-        commands.append(f'./xmlchange STOP_OPTION={STOP_OPTION},STOP_N={STOP_N},REST_N={REST_N} --file env_run.xml')
+        commands.append(f'./xmlchange STOP_OPTION={STOP_OPTION},STOP_N={STOP_N} --file env_run.xml')
+        if REST_N is not None:
+            commands.append(f'./xmlchange REST_N={REST_N} --file env_run.xml')
+        # set wallclock:
         commands.append(f'./xmlchange JOB_WALLCLOCK_TIME={JOB_WALLCLOCK_TIME} --file env_batch.xml --subgroup case.run')
+        # e.g. ./xmlchange --append CAM_CONFIG_OPTS=--offline_dyn:
         if CAM_CONFIG_OPTS_append1 is not None:
             commands.append(f'./xmlchange --append CAM_CONFIG_OPTS={CAM_CONFIG_OPTS_append1} --file env_build.xml')
+        # Add chem_mech_infile
         if CAM_CONFIG_OPS_chem_mech_file is not None:
-            commands.append(f'./xmlchange  --append CAM_CONFIG_OPTS="-usr_mech_infile \$CASEROOT/{CAM_CONFIG_OPS_chem_mech_file}" --file env_build.xml')
-        commands.append(f'./xmlchange CALENDAR={CALENDAR} --file env_build.xml')
+            commands.append(
+                f'./xmlchange  --append CAM_CONFIG_OPTS="-usr_mech_infile \$CASEROOT/{CAM_CONFIG_OPS_chem_mech_file}" --file env_build.xml')
+        if CALENDAR is not None:
+            commands.append(f'./xmlchange CALENDAR={CALENDAR} --file env_build.xml')
         commands.append(f'./xmlchange RUN_STARTDATE={RUN_STARTDATE} --file env_run.xml')
         commands.append(f'./xmlchange NTASKS={NUMNODES},NTASKS_ESP={NTASKS_ESP} --file env_mach_pes.xml')
         commands.append(f'./xmlchange --force JOB_QUEUE={queue_type} --file env_batch.xml')
 
+        # run all commands:
         for com in commands:
             print(com)
             run(com, cwd=run_path, shell=True)
 
     def cp_code(self):
+        """
+        If e.g. code needs to be copied, put here:
+        :return:
+        """
         conf = self.conf
         case_path = self.case_path
+        # copy alternative chem_mech.in file
         if conf.get('pathChem') is not None and \
                 conf.get('pathSourceMod') is not None:
             pathChem = self.root_path / Path(conf.get('pathChem'))
             comm = f'cp  {pathChem} {case_path}'
             print(comm)
             run(comm, shell=True)
+        # copy sourcemods:
         if conf.get('source_mod_path') is not None:
             pathSourceMod = self.root_path / Path(conf.get('pathSourceMod'))
             path_case_SourceMods = case_path / 'SourceMods/'
@@ -121,11 +148,19 @@ class CaseSetup:
         return
 
     def run_setup(self):
+        """
+        run ./case.setup
+        :return:
+        """
         case_path = self.case_path
         comm = './case.setup'
         run(comm, cwd=case_path, shell=True)
 
     def setup_nl(self):
+        """
+        Copy namelists from case setup-folder
+        :return:
+        """
         config_path = Path(self.config_folder)
         case_path = self.case_path
 
@@ -135,11 +170,19 @@ class CaseSetup:
                 shutil.copy(f, case_path)
 
     def case_build(self):
+        """
+        Run ./case.build
+        :return:
+        """
         run_path = self.case_path
         comm = './case.build'
         run(comm, cwd=run_path, shell=True)
 
     def create_case_all_tasks(self):
+        """
+        Run all tasks to create, setup and build case.
+        :return:
+        """
         self.setup_case()
         self.do_xmlchanges()
         self.cp_code()
@@ -158,6 +201,5 @@ if __name__ == '__main__':
     path_casefiles = Path(args[1])
     casename = path_casefiles.stem
     cs = CaseSetup(path_casefiles, casename)
-# %%
     cs.create_case_all_tasks()
 # %%
