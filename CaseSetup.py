@@ -5,21 +5,25 @@ from pathlib import Path
 from subprocess import run
 import configparser
 
-
 # %%
 class CaseSetup:
 
     def __init__(self, path_folder, case_name):
+        self.case_name=case_name
         self.config_folder = path_folder
         pa = Path(path_folder)
         filen = pa / 'case_config.ini'
-
         config = configparser.ConfigParser()
         config.read(filen)
         config.sections()
-        print('here')
         conf = config['CONFIG']
         self.conf = conf
+        if 'DIRS' in config.sections():
+            dirs = config['DIRS']
+            self.dirs = dirs
+        else:
+            self.dirs=None
+
         self.root_path = Path(conf.get('root'))
         case_root = self.root_path / Path(conf.get('CASEROOT'))
         case_path = case_root / case_name
@@ -32,7 +36,7 @@ class CaseSetup:
         """
         conf = self.conf
         case_path = self.case_path
-        compset = conf.get('COMPSET')
+        compset = conf.get('COMPSET',raw=True)
         mach = conf.get('MACH')
         res = conf.get('RES')
         project = conf.get('PROJECT')
@@ -106,6 +110,7 @@ class CaseSetup:
         if REST_N is not None:
             commands.append(f'./xmlchange REST_N={REST_N} --file env_run.xml')
         # set wallclock:
+        commands.append(f'./xmlchange JOB_WALLCLOCK_TIME=00:30:00 --file env_batch.xml')
         commands.append(f'./xmlchange JOB_WALLCLOCK_TIME={JOB_WALLCLOCK_TIME} --file env_batch.xml --subgroup case.run')
         # e.g. ./xmlchange --append CAM_CONFIG_OPTS=--offline_dyn:
         if CAM_CONFIG_OPTS_append1 is not None:
@@ -116,7 +121,8 @@ class CaseSetup:
                 f'./xmlchange  --append CAM_CONFIG_OPTS="-usr_mech_infile \$CASEROOT/{CAM_CONFIG_OPS_chem_mech_file}" --file env_build.xml')
         if CALENDAR is not None:
             commands.append(f'./xmlchange CALENDAR={CALENDAR} --file env_build.xml')
-        commands.append(f'./xmlchange RUN_STARTDATE={RUN_STARTDATE} --file env_run.xml')
+        if RUN_STARTDATE is not None:
+            commands.append(f'./xmlchange RUN_STARTDATE={RUN_STARTDATE} --file env_run.xml')
         commands.append(f'./xmlchange NTASKS={NUMNODES},NTASKS_ESP={NTASKS_ESP} --file env_mach_pes.xml')
         commands.append(f'./xmlchange --force JOB_QUEUE={queue_type} --file env_batch.xml')
 
@@ -178,6 +184,31 @@ class CaseSetup:
         run_path = self.case_path
         comm = './case.build'
         run(comm, cwd=run_path, shell=True)
+    def copy_init_restart(self):
+        RUN_REFCASE = self.conf.get('RUN_REFCASE')
+        RUN_REFDATE= self.conf.get('RUN_REFDATE')
+        if RUN_REFCASE is None or self.dirs is None:
+            return
+        dirs=self.dirs
+        archive_directory = dirs.get('archive_directory')
+        run_directory = dirs.get('run_directory')
+        if archive_directory is None or run_directory is None:
+            return
+        archive_directory = Path(archive_directory)
+        run_directory=Path(run_directory)
+        REFCASE_dir = dirs.get('REFCASE_dir')
+        if REFCASE_dir is not None:
+            archive_directory = Path(REFCASE_dir)
+        path_restartcase = archive_directory / RUN_REFCASE
+        path_rest = path_restartcase /f'rest/{RUN_REFDATE}-00000'
+        path_run=run_directory/f'{self.case_name}/run/'
+
+        comm = f'cp -rav {path_rest}/* {path_run}/'
+        print(comm)
+        run(comm, shell=True)
+        comm_unpack=f'gunzip {RUN_REFCASE}.*.gz'
+        print(comm_unpack)
+        run(comm_unpack, cwd=path_run, shell=True)
 
     def create_case_all_tasks(self):
         """
@@ -190,6 +221,7 @@ class CaseSetup:
         self.run_setup()
         self.setup_nl()
         self.case_build()
+        self.copy_init_restart()
         return
 
 
