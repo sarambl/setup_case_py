@@ -6,9 +6,50 @@ from subprocess import run
 import configparser
 
 # %%
+def test():
+    # %%
+    p = '/cluster/home/sarambl/setup_case_py/case_inits/noresm2_pipd/LU2000/NF1850_aeroxid2014_LU2000_lospinup'
+    pa = Path(p)
+    print(pa.exists())
+    casename = pa.stem
+    path_folder = pa
+    case_name=casename
+    filen = pa / 'case_config.ini'
+    config = configparser.ConfigParser()
+    config.read(filen)
+    config.sections()
+    conf = config['CONFIG']
+    #conf_ch = config['XMLCHANGE']
+    # %%
+    commands=[]
+    for sec in config.sections():
+        if 'XMLCHANGE' in sec:
+            confsec = config[sec]
+            s_split = sec.split('/')
+            ext =f' --file {s_split[-1]}' # xml file to change
+            if len(s_split)==1:
+                ext =''
+            if s_split[0]=='XMLCHANGEapp':
+                pre_com = './xmlchange --append '
+            else:
+                pre_com='./xmlchange '
+            for key in confsec.keys():
+                comm = f'{pre_com} {key.upper()}={confsec[key]} {ext}'
+                commands.append(comm)
+    commands
+    # %%
+    if 'XMLCHANGE' in config.sections():
+        for key in config['XMLCHANGE']:
+            comm = f'./xmlchange '
+            commands.append()
+    # %%
+
+model_comps = ["ATM","CPL","OCN","WAV","GLC","ICE","ROF","LND","ESP"]
+# %%
 class CaseSetup:
 
     def __init__(self, path_folder, case_name):
+
         self.case_name=case_name
         self.config_folder = path_folder
         pa = Path(path_folder)
@@ -17,6 +58,7 @@ class CaseSetup:
         config.read(filen)
         config.sections()
         conf = config['CONFIG']
+        self.config = config
         self.conf = conf
         if 'DIRS' in config.sections():
             dirs = config['DIRS']
@@ -123,13 +165,31 @@ class CaseSetup:
             commands.append(f'./xmlchange CALENDAR={CALENDAR} --file env_build.xml')
         if RUN_STARTDATE is not None:
             commands.append(f'./xmlchange RUN_STARTDATE={RUN_STARTDATE} --file env_run.xml')
-        commands.append(f'./xmlchange NTASKS={NUMNODES},NTASKS_ESP={NTASKS_ESP} --file env_mach_pes.xml')
+        if NUMNODES is not None:
+            commands.append(f'./xmlchange NTASKS={NUMNODES},NTASKS_ESP={NTASKS_ESP} --file env_mach_pes.xml')
         commands.append(f'./xmlchange --force JOB_QUEUE={queue_type} --file env_batch.xml')
+        for sec in self.config.sections():
+            if 'XMLCHANGE' in sec:
+                confsec = self.config[sec]
+                s_split = sec.split('/')
+                ext =f' --file {s_split[-1]}' # xml file to change
+                if len(s_split)==1:
+                    ext =''
+                if s_split[0] == 'XMLCHANGEapp':
+                    pre_com = './xmlchange --append '
+                else:
+                    pre_com='./xmlchange '
+                for key in confsec.keys():
+                    comm = f'{pre_com} {key.upper()}={confsec[key]} {ext}'
+                    commands.append(comm)
 
         # run all commands:
         for com in commands:
             print(com)
             run(com, cwd=run_path, shell=True)
+
+        self.set_NTASKS()
+        return
 
     def cp_code(self):
         """
@@ -223,6 +283,20 @@ class CaseSetup:
         self.case_build()
         self.copy_init_restart()
         return
+
+    def set_NTASKS(self):
+        commands = []
+        for comp in model_comps:
+            ntasks = f'NTASKS_{comp}'
+            conf = self.conf
+            task_val = conf.get(ntasks)
+            if task_val is not None:
+                commands.append(f'./xmlchange {ntasks}={task_val} --file env_mach_pes.xml')
+
+        case_path = self.case_path
+        for com in commands:
+            print(com)
+            run(com, cwd=case_path, shell=True)
 
 
 # %%

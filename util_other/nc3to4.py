@@ -14,7 +14,8 @@ def nc3to4(dir_in, dir_out, pattern):
     """
     dir_in = Path(dir_in)
     dir_out = Path(dir_out)
-    os.makedirs(dir_out)
+    if not dir_out.exists():
+        os.makedirs(dir_out)
     fl = glob.glob(str(dir_in) + f'/*{pattern}*.nc')
     cmm_ls = []
     for f in fl:
