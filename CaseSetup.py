@@ -5,6 +5,7 @@ from pathlib import Path
 from subprocess import run
 import configparser
 
+
 # %%
 def test():
     # %%
@@ -13,44 +14,47 @@ def test():
     print(pa.exists())
     casename = pa.stem
     path_folder = pa
-    case_name=casename
+    case_name = casename
     filen = pa / 'case_config.ini'
     config = configparser.ConfigParser()
     config.read(filen)
     config.sections()
     conf = config['CONFIG']
-    #conf_ch = config['XMLCHANGE']
+    # conf_ch = config['XMLCHANGE']
     # %%
-    commands=[]
+    commands = []
     for sec in config.sections():
         if 'XMLCHANGE' in sec:
             confsec = config[sec]
             s_split = sec.split('/')
-            ext =f' --file {s_split[-1]}' # xml file to change
-            if len(s_split)==1:
-                ext =''
-            if s_split[0]=='XMLCHANGEapp':
+            ext = f' --file {s_split[-1]}'  # xml file to change
+            if len(s_split) == 1:
+                ext = ''
+            if s_split[0] == 'XMLCHANGEapp':
                 pre_com = './xmlchange --append '
             else:
-                pre_com='./xmlchange '
+                pre_com = './xmlchange '
             for key in confsec.keys():
                 comm = f'{pre_com} {key.upper()}={confsec[key]} {ext}'
                 commands.append(comm)
-    commands
     # %%
     if 'XMLCHANGE' in config.sections():
-        for key in config['XMLCHANGE']:
-            comm = f'./xmlchange '
-            commands.append()
+        ss_xml=config['XMLCHANGE']
+        for key in ss_xml:
+            comm = f'./xmlchange {ss_xml[key]}'
+            commands.append(comm)
     # %%
 
-model_comps = ["ATM","CPL","OCN","WAV","GLC","ICE","ROF","LND","ESP"]
+
+model_comps = ["ATM", "CPL", "OCN", "WAV", "GLC", "ICE", "ROF", "LND", "ESP"]
+
+
 # %%
 class CaseSetup:
 
     def __init__(self, path_folder, case_name):
 
-        self.case_name=case_name
+        self.case_name = case_name
         self.config_folder = path_folder
         pa = Path(path_folder)
         filen = pa / 'case_config.ini'
@@ -64,7 +68,7 @@ class CaseSetup:
             dirs = config['DIRS']
             self.dirs = dirs
         else:
-            self.dirs=None
+            self.dirs = None
 
         self.root_path = Path(conf.get('root'))
         case_root = self.root_path / Path(conf.get('CASEROOT'))
@@ -78,7 +82,7 @@ class CaseSetup:
         """
         conf = self.conf
         case_path = self.case_path
-        compset = conf.get('COMPSET',raw=True)
+        compset = conf.get('COMPSET', raw=True)
         mach = conf.get('MACH')
         res = conf.get('RES')
         project = conf.get('PROJECT')
@@ -172,13 +176,13 @@ class CaseSetup:
             if 'XMLCHANGE' in sec:
                 confsec = self.config[sec]
                 s_split = sec.split('/')
-                ext =f' --file {s_split[-1]}' # xml file to change
-                if len(s_split)==1:
-                    ext =''
+                ext = f' --file {s_split[-1]}'  # xml file to change
+                if len(s_split) == 1:
+                    ext = ''
                 if s_split[0] == 'XMLCHANGEapp':
                     pre_com = './xmlchange --append '
                 else:
-                    pre_com='./xmlchange '
+                    pre_com = './xmlchange '
                 for key in confsec.keys():
                     comm = f'{pre_com} {key.upper()}={confsec[key]} {ext}'
                     commands.append(comm)
@@ -244,29 +248,30 @@ class CaseSetup:
         run_path = self.case_path
         comm = './case.build'
         run(comm, cwd=run_path, shell=True)
+
     def copy_init_restart(self):
         RUN_REFCASE = self.conf.get('RUN_REFCASE')
-        RUN_REFDATE= self.conf.get('RUN_REFDATE')
+        RUN_REFDATE = self.conf.get('RUN_REFDATE')
         if RUN_REFCASE is None or self.dirs is None:
             return
-        dirs=self.dirs
+        dirs = self.dirs
         archive_directory = dirs.get('archive_directory')
         run_directory = dirs.get('run_directory')
         if archive_directory is None or run_directory is None:
             return
         archive_directory = Path(archive_directory)
-        run_directory=Path(run_directory)
+        run_directory = Path(run_directory)
         REFCASE_dir = dirs.get('REFCASE_dir')
         if REFCASE_dir is not None:
             archive_directory = Path(REFCASE_dir)
         path_restartcase = archive_directory / RUN_REFCASE
-        path_rest = path_restartcase /f'rest/{RUN_REFDATE}-00000'
-        path_run=run_directory/f'{self.case_name}/run/'
+        path_rest = path_restartcase / f'rest/{RUN_REFDATE}-00000'
+        path_run = run_directory / f'{self.case_name}/run/'
 
         comm = f'cp -rav {path_rest}/* {path_run}/'
         print(comm)
         run(comm, shell=True)
-        comm_unpack=f'gunzip {RUN_REFCASE}.*.gz'
+        comm_unpack = f'gunzip {RUN_REFCASE}.*.gz'
         print(comm_unpack)
         run(comm_unpack, cwd=path_run, shell=True)
 
