@@ -10,3 +10,4 @@ Run:
 python CaseSetup path/to/case_name/folder
 ```  
 
+Thanks to @jshaw35 for inspiration: https://github.com/jshaw35/noresm2_mpc
