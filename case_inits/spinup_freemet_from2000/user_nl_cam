@@ -19,6 +19,8 @@
 !met_data_file='/cluster/shared/noresm/inputdata/noresm-only/inputForNudging/ERA_f19_tn14/2007-01-01.nc'
 !met_filenames_list = '/cluster/work/users/sarambl/inputfiles_sara/filelist_ERA.txt'
 !met_rlx_time = 6
+!bnd_topo = '/cluster/shared/noresm/inputdata/noresm-only/inputForNudging/ERA_f19_tn14/ERA_bnd_topo.nc'
+
 drydep_method = 'xactive_lnd'
 
 &phys_ctl_nl

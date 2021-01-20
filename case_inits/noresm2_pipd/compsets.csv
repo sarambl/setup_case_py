@@ -1,0 +1,8 @@
+case_name,compset_alias,compset_name,comment, use?
+noSECTv21_PD_1850,,1850_CAM60%NORESM%NORBC%AEROXID2014, oxid/aerosol fields do not exist--> update! Dirk supplied the files, no use...
+noSECTv21_PD_1850,,1850_CAM60%NORESM%NORBC, oxid/aerosol fields do not exist--> update! Dirk supplied the files, no use...
+NF2000climo,NF2000climo,2000_CAM60%PTAERO, not correct compset but has existing fields, use atm_in?
+noSECTv21_PD_2000,,2000_CAM60%NORESM, looks like it takes CESM inputs.., no use
+noSECTv21_PIAEROXID_2000,,2000_CAM60%NORESM%PIAEROXID,looks like it takes CESM inputs.., no use
+noSECTv21_PIAEROXID,HIST_CAM60%NORESM%PIAEROXID, seems to work!, could use this one.
+,,1850_CAM60%NORESM%NORBC
