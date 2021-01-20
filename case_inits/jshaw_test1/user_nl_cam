@@ -1,0 +1,22 @@
+! Users should add all user specific namelist changes below in the form of 
+! namelist_var = new_namelist_value 
+ 
+fincl1 = 'BERGO', 'BERGSO', 'MNUCCTO', 'MNUCCRO', 'MNUCCCO', 'MNUCCDOhet', 'MNUCCDO',
+         'DSTFREZIMM', 'DSTFREZCNT', 'DSTFREZDEP', 'BCFREZIMM', 'BCFREZCNT', 'BCFREZDEP',
+         'NUMICE10s', 'NUMICE10sDST', 'NUMICE10sBC',
+         'dc_num', 'dst1_num', 'dst3_num', 'bc_c1_num', 'dst_c1_num', 'dst_c3_num',
+         'bc_num_scaled', 'dst1_num_scaled', 'dst3_num_scaled' ,
+         'DSTNIDEP', 'DSTNICNT', 'DSTNIIMM',
+         'BCNIDEP', 'BCNICNT', 'BCNIIMM', 'NUMICE10s', 'NUMIMM10sDST', 'NUMIMM10sBC',
+         'MPDI2V', 'MPDI2W','QISEDTEN', 'NIMIX_HET', 'NIMIX_CNT', 'NIMIX_IMM', 'NIMIX_DEP',
+         'MNUDEPO', 'NNUCCTO', 'NNUCCCO', 'NNUDEPO', 'NIHOMOO','HOMOO'
+
+&slfsimulator_nl
+ slf_isotherms = .true.
+&metdata_nl
+ met_nudge_only_uvps = .true.
+ met_data_file= "/cluster/shared/noresm/inputdata/noresm-only/inputForNudging/ERA_f19_tn14/2009-03-01.nc"
+ met_filenames_list = "/cluster/shared/noresm/inputdata/noresm-only/inputForNudging/ERA_f19_tn14/fileList3.txt"
+ met_rlx_time = 6
+&cam_initfiles_nl
+ bnd_topo = "/cluster/shared/noresm/inputdata/noresm-only/inputForNudging/ERA_f19_tn14/ERA_bnd_topo.nc"
