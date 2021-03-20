@@ -9,7 +9,7 @@ avgflag_pertape ='A','I','I'
 fincl1 = 'NNAT_0','H2SO4','SOA_LV','PS','LANDFRAC','COAGNUCL','leaveSecSOA','leaveSecH2SO4','FORMRATE','NUCLRATE','SOA_LV','H2SO4','SOA_NA','SO4_NA','NCONC01','NCONC02','NCONC03','NCONC04','NCONC05','NCONC06','NCONC07','NCONC08','NCONC09','NCONC10','NCONC11','NCONC12','NCONC13','NCONC14','SIGMA01','SIGMA02','SIGMA03','SIGMA04','SIGMA05','SIGMA06','SIGMA07','SIGMA08','SIGMA09','SIGMA10','SIGMA11','SIGMA12','SIGMA13','SIGMA14','NMR01','NMR02','NMR03','NMR04','NMR05','NMR06','NMR07','NMR08','NMR09','NMR10','NMR11','NMR12','NMR13','NMR14','SOA_SEC01','SOA_SEC02','SOA_SEC03','SOA_SEC04','SOA_SEC05','SO4_SEC01','SO4_SEC02','SO4_SEC03','SO4_SEC04','SO4_SEC05','nrSOA_SEC01','nrSOA_SEC02','nrSOA_SEC03','nrSOA_SEC04','nrSOA_SEC05','nrSO4_SEC01','nrSO4_SEC02','nrSO4_SEC03','nrSO4_SEC04','nrSO4_SEC05', 'SOA_NAcoagTend', 'SO4_NAcoagTend','cb_SOA_SEC01','cb_SOA_SEC02','cb_SOA_SEC03','cb_SOA_SEC04','cb_SOA_SEC05','cb_SO4_SEC01','cb_SO4_SEC02','cb_SO4_SEC03','cb_SO4_SEC04','cb_SO4_SEC05','SOA_SEC01_condTend','SOA_SEC02_condTend','SOA_SEC03_condTend','SOA_SEC04_condTend','SOA_SEC05_condTend', 'SO4_SEC01_condTend', 'SO4_SEC02_condTend','SO4_SEC03_condTend','SO4_SEC04_condTend','SO4_SEC05_condTend', 'SOA_NAcondTend', 'SO4_NAcondTend', 'SOA_A1condTend','SO4_A1condTend', 'FSNS','FSDS_DRF','T','GR','GRH2SO4','GRSOA','SO4_NAclcoagTend','SO4_NAcoagTend','CCN4','CCN6', 'TGCLDCWP','U','V','cb_H2SO4','cb_SOA_LV','cb_SOA_NA','cb_SO4_NA','CLDTOT','CDNUMC', 'nrSEC01_diff', 'nrSEC02_diff', 'nrSEC03_diff', 'nrSEC04_diff', 'nrSEC05_diff', 'OH','SO2','isoprene','monoterp','SOA_SV','OH_vmr','O3_vmr','NO3_vmr','GS_SO2', 'GS_H2SO4','GS_monoterp','GS_isoprene', 'OH_bef', 'OH_aft','HO2_bef','HO2_aft', 'NO3_bef','NO3_aft'
 
 ! fincl2 = 'PS','U','V','TAUX','TAUY','FSDS','TS','T','Q','PHIS','QFLX','SHFLX'
-! fincl3 = 'SFisoprene','SFmonoterp'
+fincl3 = 'SFisoprene','SFmonoterp'
 
 
 ! user_nl_cam additions related to nudging. Specify winds, set relax time, set first wind field file, path to all windfield files
@@ -36,12 +36,11 @@ docosp= .false.
 megan_specifier = ''
 /
 &chem_inparm
-!TODO: change:
-srf_emis_specifier= 'BC_AX  ->  /cluster/shared/noresm/inputdata/atm/cam/chem/emis/cmip6_emissions_version20180512/emissions_cmip6_noresm2_BC_AX_anthrosurfALL_surface_1850_1.9x2.5_version20180512.nc',
-         'BC_N   ->  /cluster/shared/noresm/inputdata/atm/cam/chem/emis/cmip6_emissions_version20180512/emissions_cmip6_noresm2_BC_N_anthrosurfALL_surface_1850_1.9x2.5_version20180512.nc',
-         'OM_NI  ->  /cluster/shared/noresm/inputdata/atm/cam/chem/emis/cmip6_emissions_version20180512/emissions_cmip6_noresm2_OM_NI_anthrosurfALL_surface_1850_1.9x2.5_version20180512.nc',
-         'SO2    ->  /cluster/shared/noresm/inputdata/atm/cam/chem/emis/cmip6_emissions_version20180512/emissions_cmip6_noresm2_SO2_anthrosurfALL_surface_1850_1.9x2.5_version20180512.nc',
-         'SO4_PR ->  /cluster/shared/noresm/inputdata/atm/cam/chem/emis/cmip6_emissions_version20180512/emissions_cmip6_noresm2_SO4_PR_anthrosurfALL_surface_1850_1.9x2.5_version20180512.nc',
-         'isoprene -> /cluster/work/users/sarambl/inputfiles_sara/edited_inputdata/bvoc_emfiles/NF1850_MMET/em_SFisoprene_3-4_NF1850_MMET_ems.nc',
-         'monoterp -> /cluster/work/users/sarambl/inputfiles_sara/edited_inputdata/bvoc_emfiles/NF1850_MMET/em_SFmonoterp_3-4_NF1850_MMET_ems.nc'
+srf_emis_specifier= 'BC_AX  ->  /cluster/shared/noresm/inputdata/atm/cam/chem/emis/cmip6_emissions_version20180512/perturbations/emissions_cmip6_noresm2_BC_AX_anthrosurfALL_surface_2014_date_1850_1.9x2.5_version20180512.nc',
+                    'BC_N   ->  /cluster/shared/noresm/inputdata/atm/cam/chem/emis/cmip6_emissions_version20180512/perturbations/emissions_cmip6_noresm2_BC_N_anthrosurfALL_surface_2014_date_1850_1.9x2.5_version20180512.nc',
+                    'OM_NI  ->  /cluster/shared/noresm/inputdata/atm/cam/chem/emis/cmip6_emissions_version20180512/perturbations/emissions_cmip6_noresm2_OM_NI_anthrosurfALL_surface_2014_date_1850_1.9x2.5_version20180512.nc',
+                    'SO2    ->  /cluster/shared/noresm/inputdata/atm/cam/chem/emis/cmip6_emissions_version20180512/perturbations/emissions_cmip6_noresm2_SO2_anthrosurfALL_surface_2014_date_1850_1.9x2.5_version20180512.nc',
+                    'SO4_PR ->  /cluster/shared/noresm/inputdata/atm/cam/chem/emis/cmip6_emissions_version20180512/perturbations/emissions_cmip6_noresm2_SO4_PR_anthrosurfALL_surface_2014_date_1850_1.9x2.5_version20180512.nc',
+                    'isoprene -> /cluster/work/users/sarambl/inputfiles_sara/edited_inputdata/bvoc_emfiles/NF1850_aeroxid2014_LU2000PICO2_noSECT_def/em_SFisoprene_3-3_NF1850_aeroxid2014_LU2000PICO2_noSECT_def_ems.nc',
+                    'monoterp -> /cluster/work/users/sarambl/inputfiles_sara/edited_inputdata/bvoc_emfiles/NF1850_aeroxid2014_LU2000PICO2_noSECT_def/em_SFmonoterp_3-3_NF1850_aeroxid2014_LU2000PICO2_noSECT_def_ems.nc'
 /
