@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="fram" autoUploadExternalChanges="true">
+    <serverData>
+      <paths name="Saturn (nird root)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/ubuntu/mnts/nird/projects/IMP_SEC_CAM-Nor" local="$PROJECT_DIR$/../IMP_SEC_CAM-Nor" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="fram">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/setup_case_py" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="fram (3)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/setup_case_py" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>

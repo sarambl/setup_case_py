@@ -1,0 +1,16 @@
+- Check compset:
+- Run period...
+- Nudging data: 
+    - Made script for downloading and generating. 
+    - have already 2013
+    - other format: has throughout 2015. 
+- Check compset for previous data. 
+    - init file: /work/shared/noresm/inputdata/atm/cam/inic/fv/cami-mam3_0000-01-01_0.9x1.25_L32_c141031.nc
+    - 
+- Init file:
+    - Donno.. changing resolution, s
+    
+- Time period: start 2012 -- 2018? 
+    - Use init-file from my 2010 file? 
+    - init file 2010 file from noSECTv21_default_dd
+    - 
