@@ -5,6 +5,8 @@ from pathlib import Path
 from subprocess import run
 import configparser
 
+model_comps = ["ATM", "CPL", "OCN", "WAV", "GLC", "ICE", "ROF", "LND", "ESP"]
+
 
 # %%
 def test():
@@ -46,7 +48,6 @@ def test():
     # %%
 
 
-model_comps = ["ATM", "CPL", "OCN", "WAV", "GLC", "ICE", "ROF", "LND", "ESP"]
 
 
 # %%
