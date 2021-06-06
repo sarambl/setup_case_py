@@ -6,6 +6,18 @@ from subprocess import run
 import configparser
 
 model_comps = ["ATM", "CPL", "OCN", "WAV", "GLC", "ICE", "ROF", "LND", "ESP"]
+# %%
+tetralith_purge_load_models = [
+    "module purge ",
+    "module load buildenv-intel/2018.u1-bare ",
+    "module load netCDF/4.4.1.1-HDF5-1.8.19-nsc1-intel-2018a-eb ",
+    "module load HDF5/1.8.19-nsc1-intel-2018a-eb ",
+    "module load PnetCDF/1.8.1-nsc1-intel-2018a-eb "]
+
+def run_clean_env(comms = tetralith_purge_load_models):
+    for co in comms:
+        print(co)
+        run(co,  shell=True)
 
 
 # %%
@@ -29,6 +41,7 @@ def test():
         if 'XMLCHANGE' in sec:
             confsec = config[sec]
             s_split = sec.split('/')
+            print(s_split)
             ext = f' --file {s_split[-1]}'  # xml file to change
             if len(s_split) == 1:
                 ext = ''
@@ -88,20 +101,31 @@ class CaseSetup:
         res = conf.get('RES')
         project = conf.get('PROJECT')
         misc = conf.get('MISC')
+        #if mach =='tetralith':
+        pecount = conf.get('PECOUNT')
         create_case = \
             f'./create_newcase ' \
             f'--case {case_path} ' \
             f'--compset {compset} ' \
             f'--res {res} ' \
-            f'--mach {mach} ' \
-            f'--project {project} ' \
-            f'{misc}'
+            f'--mach {mach} '
+        if mach=='tetralith':# is None:
+            create_case = create_case +f' --pecount {pecount} ' \
+                                       f'--project {project} '
+        else:
+            create_case = create_case + f' --project {project} '
+        create_case = create_case + misc
+        #f'--project {project} ' \
+        #f'{misc}'
         print(create_case)
 
         _r = self.root_path / Path(conf.get('ModelRoot'))
         mod = str(conf.get('model'))
         run_path = _r / mod / 'cime/scripts'
         run(create_case, cwd=run_path, shell=True)
+        if mach=='tetralith':
+            run_clean_env()
+            #run(tetralith_purge_load_models, shell=True)
 
     def do_xmlchanges(self):
         """
