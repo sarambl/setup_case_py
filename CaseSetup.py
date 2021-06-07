@@ -8,17 +8,20 @@ import configparser
 model_comps = ["ATM", "CPL", "OCN", "WAV", "GLC", "ICE", "ROF", "LND", "ESP"]
 # %%
 tetralith_purge_load_models = [
-    "module purge ",
+    "module purge",
     "module load buildenv-intel/2018.u1-bare ",
     "module load netCDF/4.4.1.1-HDF5-1.8.19-nsc1-intel-2018a-eb ",
     "module load HDF5/1.8.19-nsc1-intel-2018a-eb ",
     "module load PnetCDF/1.8.1-nsc1-intel-2018a-eb "]
 
-def run_clean_env(run_path, comms = tetralith_purge_load_models):
+def run_clean_env(run_path='/', comms = tetralith_purge_load_models):
     for co in comms:
         print(co)
         run(co,  shell=True, cwd=run_path)
 
+def add_clean_env2comm(com):
+    out = ' ;'.join(tetralith_purge_load_models) + '; ' + com
+    return out
 
 # %%
 def test():
@@ -75,7 +78,6 @@ class CaseSetup:
         :param path_folder:
         :param case_name:
         """
-
         self.case_name = case_name
         self.config_folder = path_folder
         # Path where the case info lives:
@@ -112,6 +114,7 @@ class CaseSetup:
         case_path = self.case_path
         compset = conf.get('COMPSET', raw=True)
         mach = conf.get('MACH')
+        self.mach = mach
         res = conf.get('RES')
         project = conf.get('PROJECT')
         misc = conf.get('MISC')
@@ -136,10 +139,12 @@ class CaseSetup:
         _r = self.root_path / Path(conf.get('ModelRoot'))
         mod = str(conf.get('model'))
         run_path = _r / mod / 'cime/scripts'
-        run(create_case, cwd=run_path, shell=True)
         if mach=='tetralith':
-            # clean environment and load appropriate modules:
-            run_clean_env(run_path)
+            create_case = add_clean_env2comm(create_case)
+        run(create_case, cwd=run_path, shell=True)
+        #if mach=='tetralith':
+        #    # clean environment and load appropriate modules:
+        #    run_clean_env(run_path)
 
     def do_xmlchanges(self):
         """
@@ -297,6 +302,9 @@ class CaseSetup:
         """
         case_path = self.case_path
         comm = './case.setup'
+        if self.mach=='tetralith':
+            comm = add_clean_env2comm(comm)
+
         run(comm, cwd=case_path, shell=True)
 
     def setup_nl(self):
@@ -319,6 +327,9 @@ class CaseSetup:
         """
         run_path = self.case_path
         comm = './case.build'
+        if self.mach=='tetralith':
+            comm = add_clean_env2comm(comm)
+
         run(comm, cwd=run_path, shell=True)
 
     def copy_init_restart(self):
