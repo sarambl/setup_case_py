@@ -14,10 +14,10 @@ tetralith_purge_load_models = [
     "module load HDF5/1.8.19-nsc1-intel-2018a-eb ",
     "module load PnetCDF/1.8.1-nsc1-intel-2018a-eb "]
 
-def run_clean_env(comms = tetralith_purge_load_models):
+def run_clean_env(run_path, comms = tetralith_purge_load_models):
     for co in comms:
         print(co)
-        run(co,  shell=True)
+        run(co,  shell=True, cwd=run_path)
 
 
 # %%
@@ -65,13 +65,25 @@ def test():
 
 # %%
 class CaseSetup:
+    """
+    Class for setting up cases
+    """
 
     def __init__(self, path_folder, case_name):
+        """
+        Set parameters for case
+        :param path_folder:
+        :param case_name:
+        """
 
         self.case_name = case_name
         self.config_folder = path_folder
+        # Path where the case info lives:
         pa = Path(path_folder)
+        # path to ini file (keeps xmlchanges)
         filen = pa / 'case_config.ini'
+
+        print('Reading settings from: ',filen)
         config = configparser.ConfigParser()
         config.read(filen)
         config.sections()
@@ -79,6 +91,8 @@ class CaseSetup:
         self.config = config
         self.conf = conf
         if 'DIRS' in config.sections():
+            # contains the paths to the rundir and archive
+            # Used to copy init/restart files.
             dirs = config['DIRS']
             self.dirs = dirs
         else:
@@ -124,8 +138,8 @@ class CaseSetup:
         run_path = _r / mod / 'cime/scripts'
         run(create_case, cwd=run_path, shell=True)
         if mach=='tetralith':
-            run_clean_env()
-            #run(tetralith_purge_load_models, shell=True)
+            # clean environment and load appropriate modules:
+            run_clean_env(run_path)
 
     def do_xmlchanges(self):
         """
@@ -135,6 +149,9 @@ class CaseSetup:
         conf = self.conf
         case_path = self.case_path
         run_path = case_path
+        # various preset options which I have used.
+        # much of the below options can instead be invoced by specifying
+        # options under [XMLCHANGES/name_of_file.xml] which will then be run after
         STOP_OPTION = conf.get('STOP_OPTION')
         STOP_N = conf.get('STOP_N')
         JOB_WALLCLOCK_TIME = conf.get('JOB_WALLCLOCK_TIME')
@@ -170,18 +187,15 @@ class CaseSetup:
             commands.append(
                 'sed -i \'s/<arg flag="--qos" name="$JOB_QUEUE"/<arg flag="-p" name="$JOB_QUEUE"/\' env_batch.xml')
 
-        if RUN_TYPE is not None:
-            commands.append(f'./xmlchange RUN_TYPE={RUN_TYPE} --file env_run.xml')
-        if RUN_REFCASE is not None:
-            commands.append(f'./xmlchange RUN_REFCASE={RUN_REFCASE} --file env_run.xml')
-        if RUN_REFDATE is not None:
-            commands.append(f'./xmlchange RUN_REFDATE={RUN_REFDATE} --file env_run.xml')
 
-        commands.append(f'./xmlchange STOP_OPTION={STOP_OPTION},STOP_N={STOP_N} --file env_run.xml')
-        if REST_N is not None:
-            commands.append(f'./xmlchange REST_N={REST_N} --file env_run.xml')
+        if RUN_STARTDATE is not None:
+            commands.append(f'./xmlchange RUN_STARTDATE={RUN_STARTDATE} --file env_run.xml')
+        # xmlchanges to xml files. Preferably these can be set by specifying options under
+        # [XMLCHANGES/env_*.xml], but these are kept for consistency with old cases.
+        self._set_xmlchanges_old(CALENDAR, NTASKS_ESP, NUMNODES, REST_N, RUN_REFCASE, RUN_REFDATE, RUN_TYPE, STOP_N,
+                                 STOP_OPTION, commands)
+
         # set wallclock:
-        commands.append(f'./xmlchange JOB_WALLCLOCK_TIME=00:30:00 --file env_batch.xml')
         commands.append(f'./xmlchange JOB_WALLCLOCK_TIME={JOB_WALLCLOCK_TIME} --file env_batch.xml --subgroup case.run')
         # e.g. ./xmlchange --append CAM_CONFIG_OPTS=--offline_dyn:
         if CAM_CONFIG_OPTS_append1 is not None:
@@ -190,18 +204,16 @@ class CaseSetup:
         if CAM_CONFIG_OPS_chem_mech_file is not None:
             commands.append(
                 f'./xmlchange  --append CAM_CONFIG_OPTS="-usr_mech_infile \$CASEROOT/{CAM_CONFIG_OPS_chem_mech_file}" --file env_build.xml')
-        if CALENDAR is not None:
-            commands.append(f'./xmlchange CALENDAR={CALENDAR} --file env_build.xml')
-        if RUN_STARTDATE is not None:
-            commands.append(f'./xmlchange RUN_STARTDATE={RUN_STARTDATE} --file env_run.xml')
-        if NUMNODES is not None:
-            commands.append(f'./xmlchange NTASKS={NUMNODES},NTASKS_ESP={NTASKS_ESP} --file env_mach_pes.xml')
+
         commands.append(f'./xmlchange --force JOB_QUEUE={queue_type} --file env_batch.xml')
+
+
         for sec in self.config.sections():
             if 'XMLCHANGE' in sec:
                 confsec = self.config[sec]
                 s_split = sec.split('/')
-                ext = f' --file {s_split[-1]}'  # xml file to change
+                # xml file to change:
+                ext = f' --file {s_split[-1]}'
                 if len(s_split) == 1:
                     ext = ''
                 if s_split[0] == 'XMLCHANGEapp':
@@ -217,8 +229,43 @@ class CaseSetup:
             print(com)
             run(com, cwd=run_path, shell=True)
 
-        self.set_NTASKS()
         return
+
+    def _set_xmlchanges_old(self, CALENDAR, NTASKS_ESP, NUMNODES, REST_N, RUN_REFCASE, RUN_REFDATE, RUN_TYPE, STOP_N,
+                            STOP_OPTION, commands):
+        """
+        xmlchanges to xml files. Preferably these can be set by specifying options under
+        [XMLCHANGES/env_*.xml], but these are kept for consistency with old cases.
+
+        :param CALENDAR:
+        :param NTASKS_ESP:
+        :param NUMNODES:
+        :param REST_N:
+        :param RUN_REFCASE:
+        :param RUN_REFDATE:
+        :param RUN_TYPE:
+        :param STOP_N:
+        :param STOP_OPTION:
+        :param commands:
+        :return:
+        """
+        if RUN_TYPE is not None:
+            commands.append(f'./xmlchange RUN_TYPE={RUN_TYPE} --file env_run.xml')
+        if RUN_REFCASE is not None:
+            commands.append(f'./xmlchange RUN_REFCASE={RUN_REFCASE} --file env_run.xml')
+        if RUN_REFDATE is not None:
+            commands.append(f'./xmlchange RUN_REFDATE={RUN_REFDATE} --file env_run.xml')
+        if STOP_N is not None:
+            commands.append(f'./xmlchange STOP_N={STOP_N} --file env_run.xml')
+        if STOP_OPTION is not None:
+            commands.append(f'./xmlchange STOP_OPTION={STOP_OPTION} --file env_run.xml')
+        if REST_N is not None:
+            commands.append(f'./xmlchange REST_N={REST_N} --file env_run.xml')
+        if CALENDAR is not None:
+            commands.append(f'./xmlchange CALENDAR={CALENDAR} --file env_build.xml')
+        if NUMNODES is not None:
+            commands.append(f'./xmlchange NTASKS={NUMNODES},NTASKS_ESP={NTASKS_ESP} --file env_mach_pes.xml')
+        self.set_NTASKS()
 
     def cp_code(self):
         """
@@ -275,6 +322,10 @@ class CaseSetup:
         run(comm, cwd=run_path, shell=True)
 
     def copy_init_restart(self):
+        """
+        Copy init/restart files and unpacks them
+        :return:
+        """
         RUN_REFCASE = self.conf.get('RUN_REFCASE')
         RUN_REFDATE = self.conf.get('RUN_REFDATE')
         if RUN_REFCASE is None or self.dirs is None:
