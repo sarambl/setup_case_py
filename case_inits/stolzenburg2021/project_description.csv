@@ -1,0 +1,10 @@
+case_name, status, nice_name,comment
+CTRL_stlznbrg_noSECT,,,
+CTRL_stlznbrg_SECT,,,
+noOrgLeh_stlznbrg_noSECT,,,
+noOrgLeh_stlznbrg_SECT,,,
+noOrg10_stlznbrg_SECT,,,
+noOrg25_stlznbrg_SECT,,,
+noOrg39_stlznbrg_SECT,,,
+noNuc_stlznbrg_noSECT,,,
+noNuc_stlznbrg_SECT,,,not really needed?

@@ -26,7 +26,7 @@ def add_clean_env2comm(com):
 # %%
 def test():
     # %%
-    p = '/cluster/home/sarambl/setup_case_py/case_inits/noresm2_pipd/LU2000/NF1850_aeroxid2014_LU2000_lospinup'
+    p = '/home/x_sarbl/NorESM/setup_case_py/example_case_tetralith5'#example/noresm2_pipd/LU2000/NF1850_aeroxid2014_LU2000_lospinup'
     pa = Path(p)
     print(pa.exists())
     casename = pa.stem
@@ -177,7 +177,7 @@ class CaseSetup:
         # list of commands to be run:
         commands = []
 
-        if str(queue_type) == 'devel':
+        if str(queue_type) == 'devel' and self.mach =='fram':
             # appropriate time limit:
             JOB_WALLCLOCK_TIME = '00:30:00'
             NTASKS_ESP = 1
@@ -339,7 +339,20 @@ class CaseSetup:
         """
         RUN_REFCASE = self.conf.get('RUN_REFCASE')
         RUN_REFDATE = self.conf.get('RUN_REFDATE')
-        if RUN_REFCASE is None or self.dirs is None:
+        if RUN_REFDATE is None:
+            RUN_REFDATE = self.conf.get('RUN_STARTDATE')
+        if RUN_REFCASE is None :
+            if 'XMLCHANGE/env_run.xml' in self.config.sections():
+                conf_envrun  = self.config['XMLCHANGE/env_run.xml']
+                RUN_REFCASE = conf_envrun.get('RUN_REFCASE')
+                if RUN_REFDATE is None:
+                    RUN_REFDATE = conf_envrun.get('RUN_REFDATE')
+                if RUN_REFDATE is None:
+                    RUN_REFDATE = conf_envrun.get('RUN_STARTDATE')
+        if RUN_REFCASE is None or RUN_REFDATE is None:
+            return
+
+        if self.dirs is None:
             return
         dirs = self.dirs
         archive_directory = dirs.get('archive_directory')
@@ -356,11 +369,21 @@ class CaseSetup:
         path_run = run_directory / f'{self.case_name}/run/'
 
         comm = f'cp -rav {path_rest}/* {path_run}/'
+
         print(comm)
         run(comm, shell=True)
-        comm_unpack = f'gunzip {RUN_REFCASE}.*.gz'
+        comm_unpack = f'yes n | gunzip {RUN_REFCASE}.*.gz'
         print(comm_unpack)
         run(comm_unpack, cwd=path_run, shell=True)
+
+        path_init_atm = archive_directory / RUN_REFCASE /'atm'/'hist'
+        RUN_REFCASE=RUN_REFCASE.strip("'")
+        RUN_REFDATE = RUN_REFDATE.strip("'")
+        init_file_path = path_init_atm /f'{RUN_REFCASE}.cam.i.{RUN_REFDATE}-00000.nc'
+        print(init_file_path)
+        if init_file_path.exists():
+            comm = f'cp -rav {init_file_path} {path_run}'
+            run(comm, cwd=path_run, shell=True)
 
     def create_case_all_tasks(self):
         """
