@@ -397,6 +397,8 @@ class CaseSetup:
         self.setup_nl()
         self.case_build()
         self.copy_init_restart()
+        print(f'Done, to go to folder: \n cd {self.case_path}')
+        self.case_path
         return
 
     def set_NTASKS(self):

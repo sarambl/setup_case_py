@@ -1,10 +1,10 @@
 case_name, status, nice_name,comment
-CTRL_stlznbrg_noSECT,,,
-CTRL_stlznbrg_SECT,,,
-noOrgLeh_stlznbrg_noSECT,,,
-noOrgLeh_stlznbrg_SECT,,,
-noOrg10_stlznbrg_SECT,,,
-noOrg25_stlznbrg_SECT,,,
+CTRL_stlznbrg_noSECT,,,done
+CTRL_stlznbrg_SECT,,,running
+noOrgLeh_stlznbrg_noSECT,,,done
+noOrgLeh_stlznbrg_SECT,,,running
+noOrg10_stlznbrg_SECT,,,running
+noOrg25_stlznbrg_SECT,,,done
 noOrg39_stlznbrg_SECT,,,
-noNuc_stlznbrg_noSECT,,,
+noNuc_stlznbrg_noSECT,,,running
 noNuc_stlznbrg_SECT,,,not really needed?
