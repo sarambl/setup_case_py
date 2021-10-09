@@ -14,56 +14,18 @@ tetralith_purge_load_models = [
     "module load HDF5/1.8.19-nsc1-intel-2018a-eb ",
     "module load PnetCDF/1.8.1-nsc1-intel-2018a-eb "]
 
-def run_clean_env(run_path='/', comms = tetralith_purge_load_models):
+
+def run_clean_env(run_path='/', comms=None):
+    if comms is None:
+        comms = tetralith_purge_load_models
     for co in comms:
         print(co)
-        run(co,  shell=True, cwd=run_path)
+        run(co, shell=True, cwd=run_path)
+
 
 def add_clean_env2comm(com):
     out = ' ;'.join(tetralith_purge_load_models) + '; ' + com
     return out
-
-# %%
-def test():
-    # %%
-    p = '/home/x_sarbl/NorESM/setup_case_py/example_case_tetralith5'#example/noresm2_pipd/LU2000/NF1850_aeroxid2014_LU2000_lospinup'
-    pa = Path(p)
-    print(pa.exists())
-    casename = pa.stem
-    path_folder = pa
-    case_name = casename
-    filen = pa / 'case_config.ini'
-    config = configparser.ConfigParser()
-    config.read(filen)
-    config.sections()
-    conf = config['CONFIG']
-    # conf_ch = config['XMLCHANGE']
-    # %%
-    commands = []
-    for sec in config.sections():
-        if 'XMLCHANGE' in sec:
-            confsec = config[sec]
-            s_split = sec.split('/')
-            print(s_split)
-            ext = f' --file {s_split[-1]}'  # xml file to change
-            if len(s_split) == 1:
-                ext = ''
-            if s_split[0] == 'XMLCHANGEapp':
-                pre_com = './xmlchange --append '
-            else:
-                pre_com = './xmlchange '
-            for key in confsec.keys():
-                comm = f'{pre_com} {key.upper()}={confsec[key]} {ext}'
-                commands.append(comm)
-    # %%
-    if 'XMLCHANGE' in config.sections():
-        ss_xml=config['XMLCHANGE']
-        for key in ss_xml:
-            comm = f'./xmlchange {ss_xml[key]}'
-            commands.append(comm)
-    # %%
-
-
 
 
 # %%
@@ -78,6 +40,7 @@ class CaseSetup:
         :param path_folder:
         :param case_name:
         """
+
         self.case_name = case_name
         self.config_folder = path_folder
         # Path where the case info lives:
@@ -85,7 +48,7 @@ class CaseSetup:
         # path to ini file (keeps xmlchanges)
         filen = pa / 'case_config.ini'
 
-        print('Reading settings from: ',filen)
+        print('Reading settings from: ', filen)
         config = configparser.ConfigParser()
         config.read(filen)
         config.sections()
@@ -93,7 +56,7 @@ class CaseSetup:
         self.config = config
         self.conf = conf
         if 'DIRS' in config.sections():
-            # contains the paths to the rundir and archive
+            # contains the paths to the run dir and archive
             # Used to copy init/restart files.
             dirs = config['DIRS']
             self.dirs = dirs
@@ -105,6 +68,9 @@ class CaseSetup:
         case_path = case_root / case_name
         self.case_path = case_path
 
+        mach = conf.get('MACH')
+        self.mach = mach
+
     def setup_case(self):
         """
         Run create_newcase with specified settings
@@ -114,11 +80,9 @@ class CaseSetup:
         case_path = self.case_path
         compset = conf.get('COMPSET', raw=True)
         mach = conf.get('MACH')
-        self.mach = mach
         res = conf.get('RES')
         project = conf.get('PROJECT')
         misc = conf.get('MISC')
-        #if mach =='tetralith':
         pecount = conf.get('PECOUNT')
         create_case = \
             f'./create_newcase ' \
@@ -126,23 +90,23 @@ class CaseSetup:
             f'--compset {compset} ' \
             f'--res {res} ' \
             f'--mach {mach} '
-        if mach=='tetralith':# is None:
-            create_case = create_case +f' --pecount {pecount} ' \
-                                       f'--project {project} '
+        if mach == 'tetralith':  # is None:
+            create_case = create_case + f' --pecount {pecount} ' \
+                                        f'--project {project} '
         else:
             create_case = create_case + f' --project {project} '
         create_case = create_case + misc
-        #f'--project {project} ' \
-        #f'{misc}'
+        # f'--project {project} ' \
+        # f'{misc}'
         print(create_case)
 
         _r = self.root_path / Path(conf.get('ModelRoot'))
         mod = str(conf.get('model'))
         run_path = _r / mod / 'cime/scripts'
-        if mach=='tetralith':
+        if mach == 'tetralith':
             create_case = add_clean_env2comm(create_case)
         run(create_case, cwd=run_path, shell=True)
-        #if mach=='tetralith':
+        # if mach=='tetralith':
         #    # clean environment and load appropriate modules:
         #    run_clean_env(run_path)
 
@@ -155,7 +119,7 @@ class CaseSetup:
         case_path = self.case_path
         run_path = case_path
         # various preset options which I have used.
-        # much of the below options can instead be invoced by specifying
+        # much of the below options can instead be invoked by specifying
         # options under [XMLCHANGES/name_of_file.xml] which will then be run after
         STOP_OPTION = conf.get('STOP_OPTION')
         STOP_N = conf.get('STOP_N')
@@ -177,7 +141,7 @@ class CaseSetup:
         # list of commands to be run:
         commands = []
 
-        if str(queue_type) == 'devel' and self.mach =='fram':
+        if str(queue_type) == 'devel' and self.mach == 'fram':
             # appropriate time limit:
             JOB_WALLCLOCK_TIME = '00:30:00'
             NTASKS_ESP = 1
@@ -191,7 +155,6 @@ class CaseSetup:
             # probably unnecessary:
             commands.append(
                 'sed -i \'s/<arg flag="--qos" name="$JOB_QUEUE"/<arg flag="-p" name="$JOB_QUEUE"/\' env_batch.xml')
-
 
         if RUN_STARTDATE is not None:
             commands.append(f'./xmlchange RUN_STARTDATE={RUN_STARTDATE} --file env_run.xml')
@@ -211,7 +174,6 @@ class CaseSetup:
                 f'./xmlchange  --append CAM_CONFIG_OPTS="-usr_mech_infile \$CASEROOT/{CAM_CONFIG_OPS_chem_mech_file}" --file env_build.xml')
 
         commands.append(f'./xmlchange --force JOB_QUEUE={queue_type} --file env_batch.xml')
-
 
         for sec in self.config.sections():
             if 'XMLCHANGE' in sec:
@@ -302,7 +264,7 @@ class CaseSetup:
         """
         case_path = self.case_path
         comm = './case.setup'
-        if self.mach=='tetralith':
+        if self.mach == 'tetralith':
             comm = add_clean_env2comm(comm)
 
         run(comm, cwd=case_path, shell=True)
@@ -327,7 +289,7 @@ class CaseSetup:
         """
         run_path = self.case_path
         comm = './case.build'
-        if self.mach=='tetralith':
+        if self.mach == 'tetralith':
             comm = add_clean_env2comm(comm)
 
         run(comm, cwd=run_path, shell=True)
@@ -341,9 +303,9 @@ class CaseSetup:
         RUN_REFDATE = self.conf.get('RUN_REFDATE')
         if RUN_REFDATE is None:
             RUN_REFDATE = self.conf.get('RUN_STARTDATE')
-        if RUN_REFCASE is None :
+        if RUN_REFCASE is None:
             if 'XMLCHANGE/env_run.xml' in self.config.sections():
-                conf_envrun  = self.config['XMLCHANGE/env_run.xml']
+                conf_envrun = self.config['XMLCHANGE/env_run.xml']
                 RUN_REFCASE = conf_envrun.get('RUN_REFCASE')
                 if RUN_REFDATE is None:
                     RUN_REFDATE = conf_envrun.get('RUN_REFDATE')
@@ -376,10 +338,10 @@ class CaseSetup:
         print(comm_unpack)
         run(comm_unpack, cwd=path_run, shell=True)
 
-        path_init_atm = archive_directory / RUN_REFCASE /'atm'/'hist'
-        RUN_REFCASE=RUN_REFCASE.strip("'")
+        path_init_atm = archive_directory / RUN_REFCASE / 'atm' / 'hist'
+        RUN_REFCASE = RUN_REFCASE.strip("'")
         RUN_REFDATE = RUN_REFDATE.strip("'")
-        init_file_path = path_init_atm /f'{RUN_REFCASE}.cam.i.{RUN_REFDATE}-00000.nc'
+        init_file_path = path_init_atm / f'{RUN_REFCASE}.cam.i.{RUN_REFDATE}-00000.nc'
         print(init_file_path)
         if init_file_path.exists():
             comm = f'cp -rav {init_file_path} {path_run}'
@@ -398,7 +360,6 @@ class CaseSetup:
         self.case_build()
         self.copy_init_restart()
         print(f'Done, to go to folder: \n cd {self.case_path}')
-        self.case_path
         return
 
     def set_NTASKS(self):
